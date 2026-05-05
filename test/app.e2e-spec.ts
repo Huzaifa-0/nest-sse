@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { request as httpRequest, type ClientRequest, type IncomingMessage } from 'node:http';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/demo/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;

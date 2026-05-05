@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter } from 'node:events';
-import type { SseLifecycleEvents } from './sse.types';
+import type { SseLifecycleEvents } from '../types/sse.types';
 
 type EventEmitterHandler = (...args: unknown[]) => void;
 

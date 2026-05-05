@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { ServerResponse } from 'node:http';
-import type { ConnectionSnapshot, SseEventEnvelope } from './sse.types';
+import type { ConnectionSnapshot, SseEventEnvelope } from '../types/sse.types';
 
 /**
  * Runtime state associated with a connected SSE client.

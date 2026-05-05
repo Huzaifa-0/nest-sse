@@ -7,7 +7,7 @@ import {
   type BroadcastTarget,
   type ChannelAuthorizeFn,
   type ChannelRegistry,
-} from './sse';
+} from '../sse';
 import type { Request, Response } from 'express';
 
 interface ConnectOptions {
@@ -124,7 +124,6 @@ export class AppService {
       clientId,
       request,
       response,
-      authenticated: false,
       metadata: { audience: 'public' },
     });
   }
@@ -144,7 +143,6 @@ export class AppService {
       clientId,
       request,
       response,
-      authenticated: true,
       metadata: { userId, audience: 'authenticated' },
     });
   }

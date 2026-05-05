@@ -1,5 +1,5 @@
-import type { SseTransportAdapter } from './transports/transport.interface';
-import type { ChannelDefinition } from './sse.types';
+import type { SseTransportAdapter } from './transport.interface';
+import type { ChannelDefinition } from '../types/sse.types';
 
 /**
  * Connection options for the built-in Redis transport.

@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SseModule } from './sse';
+import { SseModule } from '../sse';
+import type { ChannelAuthorizationContext } from '../sse';
 
 @Module({
   imports: [
@@ -20,7 +21,10 @@ import { SseModule } from './sse';
         {
           pattern: 'demo.private.{userId}',
           audience: 'authenticated',
-          authorize: ({ params, requestMetadata }) => {
+          authorize: ({
+            params,
+            requestMetadata,
+          }: ChannelAuthorizationContext) => {
             const userId = String(requestMetadata.userId ?? '');
             return userId === params.userId;
           },

@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import type { ChannelDefinition, ChannelAuthorizeFn } from './sse.types';
+import type { ChannelDefinition, ChannelAuthorizeFn } from '../types/sse.types';
 
 /**
  * Metadata key for channel definitions declared on providers.
