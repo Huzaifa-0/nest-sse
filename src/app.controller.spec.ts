@@ -8,15 +8,29 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: {
+            getStatus: () => ({
+              service: 'nest-sse package is running',
+              connections: 3,
+            }),
+            ensureClientId: (clientId: string) => clientId,
+          },
+        },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return service status and connection count', () => {
+      expect(appController.getHello()).toEqual({
+        service: 'nest-sse package is running',
+        connections: 3,
+      });
     });
   });
 });
