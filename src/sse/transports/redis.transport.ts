@@ -1,5 +1,5 @@
-import type { RedisTransportOptions } from '../sse-options.interface';
-import type { SseTransportAdapter, TransportMessage } from './transport.interface';
+import type { RedisTransportOptions } from '../interfaces/sse-options.interface';
+import type { SseTransportAdapter, TransportMessage } from '../interfaces/transport.interface';
 
 type RedisLike = {
   publish(channel: string, message: string): Promise<number>;

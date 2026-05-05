@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { RedisSseTransport } from './redis.transport';
+import { RedisSseTransport } from '../transports/redis.transport';
 
 interface MockRedisClient {
   publish: (channel: string, message: string) => Promise<number>;

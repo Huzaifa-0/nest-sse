@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { SseController } from './sse.controller';
+import { SseController } from '../controllers/sse.controller';
 
 describe('SseController', () => {
   it('passes x-user-id to subscription metadata', () => {

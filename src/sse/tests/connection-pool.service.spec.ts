@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { ConnectionPoolService, type ConnectionRecord } from './connection-pool.service';
+import { ConnectionPoolService, type ConnectionRecord } from '../services/connection-pool.service';
 
 describe('ConnectionPoolService', () => {
   let service: ConnectionPoolService;

@@ -12,11 +12,11 @@ import {
   SSE_CHANNEL_REGISTRY,
   SSE_OPTIONS,
   SSE_TRANSPORT,
-} from './sse.constants';
+} from '../constants/sse.constants';
 import {
   defaultSseModuleOptions,
   type SseModuleOptions,
-} from './sse-options.interface';
+} from '../interfaces/sse-options.interface';
 import { SseEventBusService } from './sse-event-bus.service';
 import type {
   BroadcastOptions,
@@ -28,8 +28,8 @@ import type {
   StreamOpenOptions,
   SubscribeOptions,
   SubscribeResult,
-} from './sse.types';
-import type { SseTransportAdapter } from './transports/transport.interface';
+} from '../types/sse.types';
+import type { SseTransportAdapter } from '../interfaces/transport.interface';
 
 @Injectable()
 /**

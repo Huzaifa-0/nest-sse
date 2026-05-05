@@ -1,21 +1,21 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { ChannelRegistryService } from './channel-registry.service';
-import { ConnectionPoolService } from './connection-pool.service';
+import { ChannelRegistryService } from './services/channel-registry.service';
+import { ConnectionPoolService } from './services/connection-pool.service';
 import {
   SSE_CHANNEL_REGISTRY,
   SSE_OPTIONS,
   SSE_TRANSPORT,
-} from './sse.constants';
+} from './constants/sse.constants';
 import {
   defaultSseModuleOptions,
   type SseModuleAsyncOptions,
   type SseModuleOptions,
-} from './sse-options.interface';
-import { SseController } from './sse.controller';
-import { SseEventBusService } from './sse-event-bus.service';
-import { SseService } from './sse.service';
+} from './interfaces/sse-options.interface';
+import { SseController } from './controllers/sse.controller';
+import { SseEventBusService } from './services/sse-event-bus.service';
+import { SseService } from './services/sse.service';
 import { RedisSseTransport } from './transports/redis.transport';
-import type { SseTransportAdapter } from './transports/transport.interface';
+import type { SseTransportAdapter } from './interfaces/transport.interface';
 
 const noOpTransport: SseTransportAdapter = {
   async publish(): Promise<void> {

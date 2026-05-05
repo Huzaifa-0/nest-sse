@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
-import { ChannelRegistryService } from './channel-registry.service';
-import type { ChannelAuthorizationContext } from './sse.types';
+import { ChannelRegistryService } from '../services/channel-registry.service';
+import type { ChannelAuthorizationContext } from '../types/sse.types';
 
 describe('ChannelRegistryService', () => {
   function context(

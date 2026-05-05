@@ -1,8 +1,8 @@
-import { ChannelRegistryService } from './channel-registry.service';
-import { ConnectionPoolService } from './connection-pool.service';
-import { SseEventBusService } from './sse-event-bus.service';
-import { SseService } from './sse.service';
-import type { SseTransportAdapter } from './transports/transport.interface';
+import { ChannelRegistryService } from '../services/channel-registry.service';
+import { ConnectionPoolService } from '../services/connection-pool.service';
+import { SseEventBusService } from '../services/sse-event-bus.service';
+import { SseService } from '../services/sse.service';
+import type { SseTransportAdapter } from '../interfaces/transport.interface';
 
 describe('SseService', () => {
   let service: SseService;
@@ -31,8 +31,8 @@ describe('SseService', () => {
             pattern: 'orders.{orderId}',
             audience: 'authenticated',
             authorize: ({ params, requestMetadata }) => {
-              const allowedOrderId = requestMetadata.orderId;
-              return allowedOrderId === params.orderId;
+              const allowedOrderId = (requestMetadata as { orderId: string }).orderId;
+              return allowedOrderId === (params as { orderId: string }).orderId;
             },
           },
         ],
@@ -45,8 +45,8 @@ describe('SseService', () => {
           pattern: 'orders.{orderId}',
           audience: 'authenticated',
           authorize: ({ params, requestMetadata }) => {
-            const allowedOrderId = requestMetadata.orderId;
-            return allowedOrderId === params.orderId;
+            const allowedOrderId = (requestMetadata as { orderId: string }).orderId;
+            return allowedOrderId === (params as { orderId: string }).orderId;
           },
         },
       ]),

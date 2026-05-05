@@ -13,7 +13,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { SseService } from './sse.service';
+import { SseService } from '../services/sse.service';
 
 /**
  * Payload for subscribe and unsubscribe endpoints.

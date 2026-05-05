@@ -1,4 +1,4 @@
-import type { SseEventEnvelope } from '../sse.types';
+import type { SseEventEnvelope } from '../types/sse.types';
 
 /**
  * Message envelope exchanged by transport drivers.

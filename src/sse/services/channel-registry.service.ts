@@ -8,7 +8,7 @@ import type {
   ChannelRegistry,
   ChannelParams,
   ResolvedChannel,
-} from './sse.types';
+} from '../types/sse.types';
 
 interface CompiledChannelDefinition {
   definition: ChannelDefinition;
