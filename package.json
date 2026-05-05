@@ -21,6 +21,17 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Huzaifa-0/nest-sse.git"
+  },
+  "keywords": [
+    "nestjs",
+    "sse",
+    "server-sent-events",
+    "event-stream",
+    "realtime"
+  ],
   "scripts": {
     "build": "nest build",
     "prepublishOnly": "npm run build",
