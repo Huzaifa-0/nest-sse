@@ -1,98 +1,554 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# nest-sse
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Scalable, event-driven Server-Sent Events (SSE) package for NestJS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This package provides:
 
-## Description
+- Stream lifecycle management (open, close, cancel, replace)
+- Connection pool with topic subscriptions and metadata
+- Topic broadcasts with audience targeting (`all`, `public`, `authenticated`)
+- Heartbeat delivery and dead-connection cleanup
+- Event buffering and automatic batch flush
+- Iterable and readable stream piping to clients
+- channel patterns with authorization callbacks
+- Optional multi-node transports (`redis` or custom adapter)
+- Typed lifecycle event bus for observability/hooks
+- Static and async module configuration
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Table Of Contents
 
-## Project setup
+- Installation
+- Basic Setup
+- Complete Module Configuration
+- Transport Drivers
+- Channel Registry And Authorization
+- HTTP API (Built-in Controller)
+- Programmatic API (SseService)
+- Event Bus Hooks
+- Event Envelope And Wire Format
+- Client Example (Browser EventSource)
+- Exports
+- Testing
+- Production Notes
 
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+## Installation
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Run the sample app:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Default port is `3000`.
 
-## Resources
+If you use Redis transport:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm i ioredis
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Basic Setup
 
-## Support
+```ts
+import { Module } from '@nestjs/common';
+import { SseModule } from './src/sse';
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+@Module({
+  imports: [
+    SseModule.forRoot(),
+  ],
+})
+export class AppModule {}
+```
 
-## Stay in touch
+## Complete Module Configuration
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```ts
+import { Module } from '@nestjs/common';
+import {
+  authenticatedChannel,
+  publicChannel,
+  SseModule,
+  type SseModuleOptions,
+} from './src/sse';
 
-## License
+const sseOptions: SseModuleOptions = {
+  maxConnections: 5000,
+  maxTopicsPerConnection: 64,
+  heartbeatIntervalMs: 12_000,
+  deadConnectionMs: 40_000,
+  bufferMaxEvents: 8,
+  bufferFlushMs: 150,
+  batchEventName: 'events.batch',
+  cancelEventName: 'stream.cancel',
+  heartbeatEventName: 'heartbeat',
+  channels: [
+    publicChannel('feed.public'),
+    authenticatedChannel('orders.{orderId}', ({ params, connection }) => {
+      return {
+        allowed: String(connection.metadata.orderId ?? '') === params.orderId,
+        reason: 'order-mismatch',
+      };
+    }),
+  ],
+};
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+@Module({
+  imports: [SseModule.forRoot(sseOptions)],
+})
+export class AppModule {}
+```
+
+Async configuration:
+
+```ts
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SseModule } from './src/sse';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    SseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        maxConnections: config.get<number>('SSE_MAX_CONNECTIONS', 10_000),
+      }),
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Option Reference
+
+```ts
+interface SseModuleOptions {
+  maxConnections?: number;
+  maxTopicsPerConnection?: number;
+  heartbeatIntervalMs?: number;
+  deadConnectionMs?: number;
+  bufferMaxEvents?: number;
+  bufferFlushMs?: number;
+  batchEventName?: string;
+  cancelEventName?: string;
+  heartbeatEventName?: string;
+  channels?: ChannelDefinition[];
+  transport?:
+    | { driver: 'redis'; options: RedisTransportOptions }
+    | { driver: 'custom'; factory: () => SseTransportAdapter };
+}
+```
+
+Runtime defaults:
+
+- `maxConnections`: `10_000`
+- `maxTopicsPerConnection`: `128`
+- `heartbeatIntervalMs`: `15_000`
+- `deadConnectionMs`: `45_000`
+- `bufferMaxEvents`: `16`
+- `bufferFlushMs`: `250`
+- `batchEventName`: `events.batch`
+- `cancelEventName`: `stream.cancel`
+- `heartbeatEventName`: `heartbeat`
+
+## Transport Drivers
+
+### Single instance
+
+No transport configuration is required for single-instance deployments.
+
+### 1) Redis Transport (multi instance fan-out)
+
+```ts
+SseModule.forRoot({
+  transport: {
+    driver: 'redis',
+    options: {
+      host: '127.0.0.1',
+      port: 6379,
+      password: process.env.REDIS_PASSWORD,
+      db: 0,
+      channel: 'nest-sse:broadcast',
+    },
+  },
+});
+```
+
+### 2) Custom Transport Adapter
+
+```ts
+import { type SseTransportAdapter, type TransportMessage } from './src/sse';
+
+class KafkaTransport implements SseTransportAdapter {
+  async publish(message: TransportMessage): Promise<void> {
+    // Publish message to your broker.
+  }
+
+  async subscribe(handler: (message: TransportMessage) => void): Promise<void> {
+    // Subscribe and invoke handler for incoming messages.
+  }
+
+  async close(): Promise<void> {
+    // Cleanup resources.
+  }
+}
+
+SseModule.forRoot({
+  transport: {
+    driver: 'custom',
+    factory: () => new KafkaTransport(),
+  },
+});
+```
+
+## Channel Registry And Authorization
+
+Define rules with topic patterns:
+
+- `public` channels accept public and authenticated streams.
+- `authenticated` channels require authenticated streams.
+- `authorize(context)` adds custom policy checks.
+
+Pattern params use braces, for example `orders.{orderId}`.
+
+```ts
+import { authenticatedChannel, publicChannel } from './src/sse';
+
+channels: [
+  publicChannel('news.global'),
+  authenticatedChannel('users.{userId}.notifications', ({ params, requestMetadata }) => {
+    const currentUserId = String(requestMetadata.userId ?? '');
+    return {
+      allowed: currentUserId === params.userId,
+      reason: 'forbidden-user-channel',
+      metadata: { channelCheckedAt: Date.now() },
+    };
+  }),
+];
+```
+
+`authorize` context shape:
+
+```ts
+{
+  clientId: string;
+  topic: string;
+  params: Record<string, string>;
+  requestMetadata: Record<string, unknown>;
+}
+```
+
+You can also register channels at runtime by injecting `SSE_CHANNEL_REGISTRY`:
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  SSE_CHANNEL_REGISTRY,
+  type ChannelAuthorizeFn,
+  type ChannelRegistry,
+} from './src/sse';
+
+@Injectable()
+export class ChannelSetupService {
+  constructor(
+    @Inject(SSE_CHANNEL_REGISTRY)
+    private readonly registry: ChannelRegistry,
+  ) {}
+
+  register(): void {
+    const authorize: ChannelAuthorizeFn = ({ requestMetadata, params }) => ({
+      allowed: String(requestMetadata.userId ?? '') === params.userId,
+      reason: 'user-mismatch',
+    });
+
+    this.registry.registerPublic('status.public');
+    this.registry.registerAuthenticated('users.{userId}.alerts', authorize);
+  }
+}
+```
+
+Decorator helper for storing channel definitions on providers:
+
+```ts
+import { SseChannels, publicChannel } from './src/sse';
+
+@SseChannels([publicChannel('decorator.example')])
+export class ExampleProvider {}
+```
+
+## HTTP API (Built-in Controller)
+
+The module ships with a controller mounted at `/sse`.
+
+### Open streams
+
+Public stream:
+
+```bash
+curl -N "http://localhost:3000/sse/events?clientId=client-public-1"
+```
+
+Authenticated demo stream:
+
+```bash
+curl -N -H "x-user-id: 42" "http://localhost:3000/demo/connect/auth?clientId=client-auth-42"
+```
+
+### Subscribe / unsubscribe
+
+```bash
+curl -X POST http://localhost:3000/sse/subscribe \
+  -H "content-type: application/json" \
+  -d '{"clientId":"client-public-1","topic":"feed.public","metadata":{"app":"web"}}'
+
+curl -X POST http://localhost:3000/sse/unsubscribe \
+  -H "content-type: application/json" \
+  -d '{"clientId":"client-public-1","topic":"feed.public"}'
+```
+
+### Broadcast to a topic
+
+```bash
+curl -X POST http://localhost:3000/sse/broadcast \
+  -H "content-type: application/json" \
+  -d '{
+    "topic":"feed.public",
+    "event":"feed.updated",
+    "data":{"message":"new update"},
+    "target":"all"
+  }'
+```
+
+`target` can be `all`, `public`, or `authenticated`.
+
+### Pipe iterable items to a client
+
+```bash
+curl -X POST http://localhost:3000/sse/pipe/iterable \
+  -H "content-type: application/json" \
+  -d '{
+    "clientId":"client-public-1",
+    "items":[{"id":1},{"id":2},{"id":3}],
+    "event":"stream.item"
+  }'
+```
+
+### Cancel a stream
+
+```bash
+curl -X POST http://localhost:3000/sse/cancel \
+  -H "content-type: application/json" \
+  -d '{"clientId":"client-public-1","reason":"manual-stop"}'
+```
+
+### Connection diagnostics
+
+```bash
+curl http://localhost:3000/sse/connections
+```
+
+Unauthorized subscription attempts return `403` when channel policies deny access.
+
+## Programmatic API (SseService)
+
+Inject `SseService` when you need direct control from your own services/controllers.
+
+```ts
+import { Injectable } from '@nestjs/common';
+import { Readable } from 'node:stream';
+import { SseService } from './src/sse';
+
+@Injectable()
+export class NotificationsService {
+  constructor(private readonly sse: SseService) {}
+
+  async broadcastSystemStatus(): Promise<number> {
+    return this.sse.broadcast(
+      'system.status',
+      {
+        event: 'status.changed',
+        data: { healthy: true },
+      },
+      { target: 'all' },
+    );
+  }
+
+  async streamIterable(clientId: string): Promise<number> {
+    return this.sse.pipeIterable({
+      clientId,
+      iterable: [1, 2, 3, 4, 5],
+      event: 'numbers.item',
+    });
+  }
+
+  async streamReadable(clientId: string): Promise<number> {
+    const readable = Readable.from(['chunk-a', 'chunk-b', 'chunk-c']);
+    return this.sse.pipeReadable({
+      clientId,
+      readable,
+      event: 'chunks.item',
+    });
+  }
+
+  cancel(clientId: string): boolean {
+    return this.sse.cancelStream(clientId, 'admin-cancelled');
+  }
+
+  diagnostics(topic: string): {
+    totalConnections: number;
+    subscribers: number;
+    snapshots: ReturnType<SseService['connectionSnapshots']>;
+  } {
+    return {
+      totalConnections: this.sse.connectionCount(),
+      subscribers: this.sse.topicCount(topic),
+      snapshots: this.sse.connectionSnapshots(),
+    };
+  }
+
+  annotate(clientId: string): boolean {
+    return this.sse.setMetadata(clientId, { lastTouchedBy: 'system' });
+  }
+}
+```
+
+Available core methods:
+
+- `openStream(options)`
+- `closeConnection(clientId, reason?)`
+- `subscribe(options)`
+- `unsubscribe(options)`
+- `broadcast(topic, envelope, { target? })`
+- `pipeIterable(options)`
+- `pipeReadable(options)`
+- `cancelStream(clientId, reason?)`
+- `connectionCount()` / `topicCount(topic)`
+- `connectionSnapshot(clientId)` / `connectionSnapshots()`
+- `setMetadata(clientId, metadata)`
+- `waitForClose(request)`
+
+## Event Bus Hooks
+
+`SseEventBusService` exposes a typed, in-memory event bus for lifecycle hooks.
+
+```ts
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { SseEventBusService } from './src/sse';
+
+@Injectable()
+export class SseMetricsService implements OnModuleInit, OnModuleDestroy {
+  private unsubscribe?: () => void;
+
+  constructor(private readonly bus: SseEventBusService) {}
+
+  onModuleInit(): void {
+    this.unsubscribe = this.bus.on('broadcast.sent', ({ topic, target, count }) => {
+      console.log('[sse] broadcast', { topic, target, count });
+    });
+  }
+
+  onModuleDestroy(): void {
+    this.unsubscribe?.();
+  }
+}
+```
+
+Lifecycle events:
+
+- `connection.opened`
+- `connection.closed`
+- `connection.heartbeat.sent`
+- `connection.heartbeat.timeout`
+- `subscription.added`
+- `subscription.removed`
+- `broadcast.sent`
+- `stream.aborted`
+- `stream.completed`
+- `stream.cancelled`
+- `connection.metadata.updated`
+
+## Event Envelope And Wire Format
+
+Event envelope type:
+
+```ts
+interface SseEventEnvelope<T = unknown> {
+  id?: string;
+  event: string;
+  data: T;
+  retry?: number;
+  timestamp?: number;
+  metadata?: Record<string, unknown>;
+}
+```
+
+Notes:
+
+- If `id` is omitted, the service generates a monotonic ID.
+- If `timestamp` is omitted, the service adds one.
+- When buffer size is greater than 1, multiple events may flush as one wrapper event.
+- Wrapper event name defaults to `events.batch`.
+- Cancellation event name defaults to `stream.cancel`.
+- Heartbeat event name defaults to `heartbeat`.
+
+## Client Example (Browser EventSource)
+
+```ts
+const clientId = 'web-client-1';
+const es = new EventSource(`/sse/events?clientId=${encodeURIComponent(clientId)}`);
+
+es.addEventListener('connection.ready', (evt) => {
+  console.log('connected', JSON.parse((evt as MessageEvent).data));
+});
+
+es.addEventListener('events.batch', (evt) => {
+  const events = JSON.parse((evt as MessageEvent).data);
+  console.log('batch', events);
+});
+
+es.addEventListener('feed.updated', (evt) => {
+  console.log('feed update', JSON.parse((evt as MessageEvent).data));
+});
+
+es.addEventListener('heartbeat', () => {
+  // Keepalive signal.
+});
+
+es.addEventListener('stream.cancel', (evt) => {
+  console.log('cancelled', JSON.parse((evt as MessageEvent).data));
+  es.close();
+});
+```
+
+## Exports
+
+Package exports include:
+
+- `SseModule`
+- `SseService`
+- `SseEventBusService`
+- `ConnectionPoolService`
+- `ChannelRegistryService`
+- `SSE_CHANNEL_REGISTRY`
+- `SseChannels`, `publicChannel`, `authenticatedChannel`, `SSE_CHANNELS_METADATA`
+- `RedisSseTransport`
+- Type exports from `sse.types.ts`, `sse-options.interface.ts`, and `transports/transport.interface.ts`
+
+## Testing
+
+```bash
+npm run build
+npm test -- --runInBand
+```
+
+## Production Notes
+
+- Disable compression for `text/event-stream` routes.
+- Keep proxy/read timeouts greater than `heartbeatIntervalMs`.
+- Use Redis transport for horizontal scaling across app instances.
+- Ensure `clientId` values are stable and unique per logical stream owner.
