@@ -1,12 +1,29 @@
 {
   "name": "nest-sse",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "version": "0.1.0",
+  "description": "Scalable, event-driven Server-Sent Events (SSE) package for NestJS.",
+  "author": "Huzaifa Alfahl",
+  "private": false,
+  "license": "MIT",
+  "main": "dist/sse/index.js",
+  "types": "dist/sse/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/sse/index.d.ts",
+      "default": "./dist/sse/index.js"
+    }
+  },
+  "files": [
+    "dist/sse",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "nest build",
+    "prepublishOnly": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
