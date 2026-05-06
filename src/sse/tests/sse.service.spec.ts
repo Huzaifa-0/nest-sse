@@ -175,6 +175,48 @@ describe('SseService', () => {
     expect(result).toEqual({ ok: true });
   });
 
+  it('broadcasts public topic events to subscribed clients regardless of metadata', async () => {
+    const { res } = mockConnection('c11', { userId: 'u1' });
+    expect(service.subscribe({ clientId: 'c11', topic: 'news.public' })).toEqual({ ok: true });
+
+    jest.advanceTimersByTime(25);
+    (res.write as any).mockClear();
+
+    const delivered = await service.broadcast(
+      'news.public',
+      { event: 'news.updated', data: { id: 1 } },
+    );
+
+    jest.advanceTimersByTime(25);
+
+    expect(delivered).toBe(1);
+    expect(res.write).toHaveBeenCalled();
+  });
+
+  it('broadcasts authenticated topic events after authorized subscription', async () => {
+    const { res } = mockConnection('c12');
+    expect(
+      service.subscribe({
+        clientId: 'c12',
+        topic: 'news.private',
+        metadata: { userId: 'u1' },
+      }),
+    ).toEqual({ ok: true });
+
+    jest.advanceTimersByTime(25);
+    (res.write as any).mockClear();
+
+    const delivered = await service.broadcast(
+      'news.private',
+      { event: 'news.updated', data: { id: 2 } },
+    );
+
+    jest.advanceTimersByTime(25);
+
+    expect(delivered).toBe(1);
+    expect(res.write).toHaveBeenCalled();
+  });
+
   it('authorizes pattern channels with params and metadata', () => {
     mockConnection('c7', { orderId: '123', userId: 'u1' });
 

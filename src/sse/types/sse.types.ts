@@ -125,13 +125,6 @@ export interface SubscribeResult {
 }
 
 /**
- * Optional broadcast behavior controls.
- */
-export interface BroadcastOptions {
-  target?: BroadcastTarget;
-}
-
-/**
  * Stream items from an iterable source to an active client connection.
  */
 export interface PipeIterableOptions {

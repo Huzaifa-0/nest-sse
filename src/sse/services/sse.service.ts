@@ -19,7 +19,7 @@ import {
 } from '../interfaces/sse-options.interface';
 import { SseEventBusService } from './sse-event-bus.service';
 import type {
-  BroadcastOptions,
+  BroadcastTarget,
   ChannelRegistry,
   ConnectionSnapshot,
   PipeIterableOptions,
@@ -60,9 +60,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
    */
   async onModuleInit(): Promise<void> {
     await this.transport.subscribe((message) => {
-      void this.deliverLocal(message.topic, message.envelope, {
-        target: message.target,
-      });
+      void this.deliverLocal(message.topic, message.envelope);
     });
 
     this.startHeartbeat();
@@ -283,16 +281,14 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Broadcasts an envelope to topic subscribers, optionally filtered by target.
+   * @description Broadcasts an envelope to topic subscribers.
    * @param topic Topic name to publish against.
    * @param envelope Event envelope to normalize and deliver.
-   * @param options Optional delivery target filter.
    * @returns Number of local subscribers that received the event.
    */
   async broadcast(
     topic: string,
     envelope: SseEventEnvelope,
-    options: BroadcastOptions = {},
   ): Promise<number> {
     const normalized: SseEventEnvelope = {
       ...envelope,
@@ -300,7 +296,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       timestamp: envelope.timestamp ?? Date.now(),
     };
 
-    const target = options.target ?? 'all';
+    const target = this.resolveBroadcastTarget(topic);
 
     await this.transport.publish({
       topic,
@@ -308,7 +304,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       target,
     });
 
-    return this.deliverLocal(topic, normalized, options);
+    return this.deliverLocal(topic, normalized);
   }
 
   /**
@@ -408,35 +404,29 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
    * @description Delivers an envelope to in-process subscribers for a topic.
    * @param topic Topic name used to select subscribers.
    * @param envelope Event envelope to write.
-   * @param options Optional audience target filter.
    * @returns Number of in-process subscribers that received the event.
    */
   private async deliverLocal(
     topic: string,
     envelope: SseEventEnvelope,
-    options: BroadcastOptions = {},
   ): Promise<number> {
-    const target = options.target ?? 'all';
+    const target = this.resolveBroadcastTarget(topic);
+
     const subscribers = this.pool.forTopic(topic);
     let count = 0;
 
     for (const connection of subscribers) {
-      const isAuthenticated = this.isAuthenticatedMetadata(connection.metadata);
-
-      if (target === 'authenticated' && !isAuthenticated) {
-        continue;
-      }
-
-      if (target === 'public' && isAuthenticated) {
-        continue;
-      }
-
       this.enqueueOrWrite(connection.clientId, envelope);
       count++;
     }
 
     this.eventBus.emit('broadcast.sent', { topic, target, count });
     return count;
+  }
+
+  private resolveBroadcastTarget(topic: string): BroadcastTarget {
+    const resolved = this.channelRegistry.resolve(topic);
+    return resolved?.definition.audience ?? 'all';
   }
 
   /**
@@ -599,10 +589,6 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   private nextEventId(): string {
     this.eventSequence += 1;
     return `${Date.now()}-${this.eventSequence}`;
-  }
-
-  private isAuthenticatedMetadata(metadata: Record<string, unknown>): boolean {
-    return Boolean(metadata.userId);
   }
 
   /**

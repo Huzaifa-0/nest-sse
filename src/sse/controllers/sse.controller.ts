@@ -31,7 +31,6 @@ interface BroadcastBody {
   topic: string;
   event: string;
   data: unknown;
-  target?: 'all' | 'public' | 'authenticated';
 }
 
 /**
@@ -50,11 +49,11 @@ interface PipeBody {
 export class SseController {
   constructor(private readonly sse: SseService) {}
 
-  @Get('events')
   /**
    * Open a public (unauthenticated) SSE stream.
    */
-  openPublicStream(
+  @Get('events')
+  openStream(
     @Query('clientId') clientId: string,
     @Req() req: Request,
     @Res() res: Response,
@@ -70,11 +69,11 @@ export class SseController {
     });
   }
 
-  @Post('subscribe')
-  @HttpCode(204)
   /**
    * Subscribe a client to a topic.
    */
+  @Post('subscribe')
+  @HttpCode(204)
   subscribe(
     @Body() body: SubscribeBody,
     @Headers('x-user-id') userId?: string,
@@ -103,11 +102,11 @@ export class SseController {
     }
   }
 
-  @Post('unsubscribe')
-  @HttpCode(204)
   /**
    * Unsubscribe a client from a topic.
    */
+  @Post('unsubscribe')
+  @HttpCode(204)
   unsubscribe(@Body() body: SubscribeBody): void {
     if (!body.clientId || !body.topic) {
       throw new BadRequestException('clientId and topic are required');
@@ -118,11 +117,11 @@ export class SseController {
       throw new BadRequestException('Unsubscribe failed');
     }
   }
-
-  @Post('broadcast')
+  
   /**
    * Broadcast an event payload to topic subscribers.
    */
+  @Post('broadcast')
   async broadcast(@Body() body: BroadcastBody): Promise<{ delivered: number }> {
     if (!body.topic || !body.event) {
       throw new BadRequestException('topic and event are required');
@@ -134,19 +133,16 @@ export class SseController {
         event: body.event,
         data: body.data,
       },
-      {
-        target: body.target,
-      },
     );
 
     return { delivered };
   }
 
-  @Post('cancel')
-  @HttpCode(204)
   /**
    * Cancel and close a client stream.
    */
+  @Post('cancel')
+  @HttpCode(204)
   cancel(@Body() body: { clientId: string; reason?: string }): void {
     if (!body.clientId) {
       throw new BadRequestException('clientId is required');
@@ -158,10 +154,10 @@ export class SseController {
     }
   }
 
-  @Post('pipe/iterable')
   /**
    * Push iterable items to a client stream as SSE events.
    */
+  @Post('pipe/iterable')
   async pipeIterable(@Body() body: PipeBody): Promise<{ sent: number }> {
     if (!body.clientId || !Array.isArray(body.items)) {
       throw new BadRequestException('clientId and items[] are required');
@@ -176,10 +172,10 @@ export class SseController {
     return { sent };
   }
 
-  @Get('connections')
   /**
    * Return active connection snapshots.
    */
+  @Get('connections')
   stats(): { count: number; items: unknown[] } {
     const items = this.sse.connectionSnapshots();
     return {

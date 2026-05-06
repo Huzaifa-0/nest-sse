@@ -4,7 +4,6 @@ import {
   SseEventBusService,
   SseService,
   SSE_CHANNEL_REGISTRY,
-  type BroadcastTarget,
   type ChannelAuthorizeFn,
   type ChannelRegistry,
 } from '../sse';
@@ -43,7 +42,6 @@ interface RegisterChannelRequest {
 interface BatchEmitRequest {
   topic: string;
   event?: string;
-  target?: BroadcastTarget;
   count?: number;
   payload?: Record<string, unknown>;
 }
@@ -218,7 +216,6 @@ export class AppService {
   async emitBatch({
     topic,
     event = 'demo.batch.item',
-    target = 'all',
     count = 5,
     payload = {},
   }: BatchEmitRequest): Promise<BatchEmitResult> {
@@ -235,7 +232,6 @@ export class AppService {
           },
           timestamp: Date.now(),
         },
-        { target },
       );
     }
 

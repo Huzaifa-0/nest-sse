@@ -124,7 +124,6 @@ export class AppController {
     body: {
       topic: string;
       event?: string;
-      target?: 'all' | 'public' | 'authenticated';
       count?: number;
       payload?: Record<string, unknown>;
     },
@@ -201,7 +200,6 @@ export class AppController {
   ): Promise<{ delivered: number }> {
     const result = await this.appService.emitBatch({
       topic: body.topic,
-      target: 'public',
       count: 1,
       event: 'demo.public',
       payload: {
@@ -218,7 +216,6 @@ export class AppController {
   ): Promise<{ delivered: number }> {
     const result = await this.appService.emitBatch({
       topic: body.topic,
-      target: 'authenticated',
       count: 1,
       event: 'demo.auth',
       payload: {
