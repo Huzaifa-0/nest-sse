@@ -1,6 +1,6 @@
 {
   "name": "nest-sse",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Scalable, event-driven Server-Sent Events (SSE) package for NestJS.",
   "author": "Huzaifa Alfahl",
   "private": false,
