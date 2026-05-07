@@ -9,7 +9,7 @@ export interface ConnectionRecord {
   clientId: string;
   response: ServerResponse;
   metadata: Record<string, unknown>;
-  topics: Set<string>;
+  channels: Set<string>;
   createdAt: number;
   lastSeenAt: number;
   bufferedEvents: SseEventEnvelope[];
@@ -19,11 +19,11 @@ export interface ConnectionRecord {
 
 @Injectable()
 /**
- * @description Tracks active connections and topic membership.
+ * @description Tracks active connections and channel membership.
  */
 export class ConnectionPoolService {
   private readonly connections = new Map<string, ConnectionRecord>();
-  private readonly topicMap = new Map<string, Set<string>>();
+  private readonly channelMap = new Map<string, Set<string>>();
 
   /**
    * @description Registers a new connection record.
@@ -63,8 +63,8 @@ export class ConnectionPoolService {
       return;
     }
 
-    for (const topic of connection.topics) {
-      this.unsubscribe(clientId, topic);
+    for (const channel of connection.channels) {
+      this.unsubscribe(clientId, channel);
     }
 
     if (connection.flushTimer) {
@@ -75,44 +75,44 @@ export class ConnectionPoolService {
   }
 
   /**
-   * @description Adds a topic subscription for a client.
+   * @description Adds a channel subscription for a client.
    * @param clientId Unique client identifier.
-   * @param topic Topic name to subscribe to.
+   * @param channel Channel name to subscribe to.
    * @returns True when the client exists and the subscription is applied.
    */
-  subscribe(clientId: string, topic: string): boolean {
+  subscribe(clientId: string, channel: string): boolean {
     const connection = this.connections.get(clientId);
     if (!connection) {
       return false;
     }
 
-    connection.topics.add(topic);
-    const clients = this.topicMap.get(topic) ?? new Set<string>();
+    connection.channels.add(channel);
+    const clients = this.channelMap.get(channel) ?? new Set<string>();
     clients.add(clientId);
-    this.topicMap.set(topic, clients);
+    this.channelMap.set(channel, clients);
 
     return true;
   }
 
   /**
-   * @description Removes a topic subscription for a client.
+   * @description Removes a channel subscription for a client.
    * @param clientId Unique client identifier.
-   * @param topic Topic name to unsubscribe from.
+   * @param channel Channel name to unsubscribe from.
    * @returns True when the client exists.
    */
-  unsubscribe(clientId: string, topic: string): boolean {
+  unsubscribe(clientId: string, channel: string): boolean {
     const connection = this.connections.get(clientId);
     if (!connection) {
       return false;
     }
 
-    connection.topics.delete(topic);
-    const clients = this.topicMap.get(topic);
+    connection.channels.delete(channel);
+    const clients = this.channelMap.get(channel);
 
     if (clients) {
       clients.delete(clientId);
       if (clients.size === 0) {
-        this.topicMap.delete(topic);
+        this.channelMap.delete(channel);
       }
     }
 
@@ -161,12 +161,12 @@ export class ConnectionPoolService {
   }
 
   /**
-   * @description Returns active subscriber connection records for a topic.
-   * @param topic Topic name to look up.
+   * @description Returns active subscriber connection records for a channel.
+   * @param channel Channel name to look up.
    * @returns Array of active subscriber connection records.
    */
-  forTopic(topic: string): ConnectionRecord[] {
-    const clientIds = this.topicMap.get(topic);
+  forChannel(channel: string): ConnectionRecord[] {
+    const clientIds = this.channelMap.get(channel);
     if (!clientIds) {
       return [];
     }
@@ -191,12 +191,12 @@ export class ConnectionPoolService {
   }
 
   /**
-   * @description Returns the number of subscribers for a topic.
-   * @param topic Topic name to look up.
-   * @returns Subscriber count for the topic.
+   * @description Returns the number of subscribers for a channel.
+   * @param channel Channel name to look up.
+   * @returns Subscriber count for the channel.
    */
-  topicCount(topic: string): number {
-    return this.topicMap.get(topic)?.size ?? 0;
+  channelCount(channel: string): number {
+    return this.channelMap.get(channel)?.size ?? 0;
   }
 
   /**
@@ -212,7 +212,7 @@ export class ConnectionPoolService {
 
     return {
       clientId: connection.clientId,
-      topics: [...connection.topics],
+      channels: [...connection.channels],
       metadata: { ...connection.metadata },
       createdAt: connection.createdAt,
       lastSeenAt: connection.lastSeenAt,

@@ -39,31 +39,31 @@ Recommended config variations:
 ### CR-001 Register public channel
 - Type: Unit
 - Setup: Register pattern demo.public with public audience
-- Steps: Resolve topic demo.public
+- Steps: Resolve channel demo.public
 - Expected: Match found, params empty, audience is public
 
 ### CR-002 Register authenticated channel with params
 - Type: Unit
 - Setup: Register orders.{orderId} as authenticated channel
-- Steps: Resolve topic orders.123
+- Steps: Resolve channel orders.123
 - Expected: Match found with params.orderId = 123
 
-### CR-003 No match for unknown topic
+### CR-003 No match for unknown channel
 - Type: Unit
 - Setup: Register demo.public only
-- Steps: Resolve topic demo.unknown
+- Steps: Resolve channel demo.unknown
 - Expected: Resolve returns null
 
 ### CR-004 Most specific match wins
 - Type: Unit
 - Setup: Register demo.{id} and demo.static
-- Steps: Resolve topic demo.static
+- Steps: Resolve channel demo.static
 - Expected: demo.static wins over demo.{id}
 
 ### CR-005 Fewer params wins on tie
 - Type: Unit
 - Setup: Register a.{x}.c and a.b.c
-- Steps: Resolve topic a.b.c
+- Steps: Resolve channel a.b.c
 - Expected: a.b.c wins because it has more static segments and fewer params
 
 ### CR-006 Auth gate denies unauthenticated connection
@@ -138,9 +138,9 @@ Recommended config variations:
 
 ### SU-001 Subscribe success for active connection
 - Type: Integration
-- Setup: Open stream then POST /sse/subscribe with topic
+- Setup: Open stream then POST /sse/subscribe with channel
 - Steps: Subscribe once
-- Expected: 204 and topicCount(topic) increments
+- Expected: 204 and channelCount(channel) increments
 
 ### SU-002 Subscribe fails when connection not found
 - Type: Integration
@@ -154,23 +154,23 @@ Recommended config variations:
 - Steps: Call subscribe
 - Expected: ok false, reason connection-closed
 
-### SU-004 Max topics per connection
+### SU-004 Max channels per connection
 - Type: Integration
-- Setup: maxTopicsPerConnection = 1
-- Steps: Subscribe to topic A then topic B
-- Expected: second subscribe rejected with max-topics-reached
+- Setup: maxChannelsPerConnection = 1
+- Steps: Subscribe to channel A then channel B
+- Expected: second subscribe rejected with max-channels-reached
 
 ### SU-005 Duplicate subscribe idempotency
 - Type: Unit
-- Setup: Subscribe same client/topic twice
+- Setup: Subscribe same client/channel twice
 - Steps: Subscribe twice
-- Expected: Both calls succeed, topic membership stored once
+- Expected: Both calls succeed, channel membership stored once
 
 ### SU-006 Unsubscribe success
 - Type: Integration
 - Setup: Active subscription
 - Steps: POST /sse/unsubscribe
-- Expected: 204 and topic removed
+- Expected: 204 and channel removed
 
 ### SU-007 Unsubscribe missing connection
 - Type: Integration
@@ -224,13 +224,13 @@ Recommended config variations:
 
 ## 5. Trigger Event and Delivery
 
-### EV-001 Broadcast to subscribed topic
+### EV-001 Broadcast to subscribed channel
 - Type: Integration
-- Setup: One subscriber on topic
+- Setup: One subscriber on channel
 - Steps: POST /sse/broadcast
 - Expected: delivered count is 1 and client receives event
 
-### EV-002 Broadcast to topic with no subscribers
+### EV-002 Broadcast to channel with no subscribers
 - Type: Integration
 - Setup: No subscribers
 - Steps: Broadcast
@@ -238,7 +238,7 @@ Recommended config variations:
 
 ### EV-003 Target filter all
 - Type: Integration
-- Setup: One public and one authenticated subscriber on same topic
+- Setup: One public and one authenticated subscriber on same channel
 - Steps: Broadcast target all
 - Expected: Both receive event
 
@@ -376,9 +376,9 @@ Recommended config variations:
 
 ### LD-003 Connection snapshots are accurate
 - Type: Integration
-- Setup: Open streams and subscribe to topics
+- Setup: Open streams and subscribe to channels
 - Steps: Call /sse/connections
-- Expected: count, topics, metadata, timestamps are coherent
+- Expected: count, channels, metadata, timestamps are coherent
 
 ## 9. Negative and Security Cases
 
@@ -388,9 +388,9 @@ Recommended config variations:
 - Steps: GET /sse/events
 - Expected: 400 bad request
 
-### NS-002 Missing topic in subscribe request
+### NS-002 Missing channel in subscribe request
 - Type: Integration
-- Setup: POST /sse/subscribe without topic
+- Setup: POST /sse/subscribe without channel
 - Steps: Send request
 - Expected: 400 bad request
 
@@ -400,9 +400,9 @@ Recommended config variations:
 - Steps: POST /sse/subscribe
 - Expected: 403 forbidden
 
-### NS-004 Large topic fan-out under max limits
+### NS-004 Large channel fan-out under max limits
 - Type: Load test
-- Setup: Many clients and topic subscriptions within configured limits
+- Setup: Many clients and channel subscriptions within configured limits
 - Steps: Broadcast bursts
 - Expected: No crash, acceptable latency, stable memory
 

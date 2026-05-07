@@ -33,7 +33,7 @@ import type { SseTransportAdapter } from '../interfaces/transport.interface';
 
 @Injectable()
 /**
- * @description Core SSE orchestration service for connections, topics, and event delivery.
+ * @description Core SSE orchestration service for connections, channels, and event delivery.
  */
 export class SseService implements OnModuleInit, OnModuleDestroy {
   private heartbeatTimer?: NodeJS.Timeout;
@@ -60,7 +60,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
    */
   async onModuleInit(): Promise<void> {
     await this.transport.subscribe((message) => {
-      void this.deliverLocal(message.topic, message.envelope);
+      void this.deliverLocal(message.channel, message.envelope);
     });
 
     this.startHeartbeat();
@@ -106,7 +106,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       clientId: options.clientId,
       response: options.response,
       metadata: options.metadata ?? {},
-      topics: new Set<string>(),
+      channels: new Set<string>(),
       createdAt: now,
       lastSeenAt: now,
       bufferedEvents: [],
@@ -161,13 +161,13 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Subscribes a client to a topic with structured failure reasons.
-   * @param options Subscription options containing client id, topic, and metadata.
+   * @description Subscribes a client to a channel with structured failure reasons.
+   * @param options Subscription options containing client id, channel, and metadata.
    * @returns Structured subscribe result.
    */
   subscribe({
     clientId,
-    topic,
+    channel,
     metadata,
   }: SubscribeOptions): SubscribeResult {
     const connection = this.pool.get(clientId);
@@ -179,20 +179,20 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       return { ok: false, reason: 'connection-closed' };
     }
 
-    if (!connection.topics.has(topic) && connection.topics.size >= this.options.maxTopicsPerConnection) {
-      return { ok: false, reason: 'max-topics-reached' };
+    if (!connection.channels.has(channel) && connection.channels.size >= this.options.maxChannelsPerConnection) {
+      return { ok: false, reason: 'max-channels-reached' };
     }
 
-    const resolved = this.channelRegistry.resolve(topic);
+    const resolved = this.channelRegistry.resolve(channel);
     let mergedMetadata: Record<string, unknown> = {...metadata};
 
     if (!resolved){
-      return { ok: false, reason: 'topic-not-found' };
+      return { ok: false, reason: 'channel-not-found' };
     }
 
     const authorizeResult = this.channelRegistry.authorize(resolved, {
       clientId,
-      topic,
+      channel,
       params: resolved.params,
       requestMetadata: metadata ?? {},
     });
@@ -213,9 +213,9 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       this.eventBus.emit('connection.metadata.updated', { clientId });
     }
 
-    const ok = this.pool.subscribe(clientId, topic);
+    const ok = this.pool.subscribe(clientId, channel);
     if (ok) {
-      this.eventBus.emit('subscription.added', { clientId, topic });
+      this.eventBus.emit('subscription.added', { clientId, channel });
     }
 
     if (!ok) {
@@ -226,14 +226,14 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Unsubscribes a client from a topic.
-   * @param options Client and topic subscription identifiers.
+   * @description Unsubscribes a client from a channel.
+   * @param options Client and channel subscription identifiers.
    * @returns True when an existing subscription was removed.
    */
-  unsubscribe({ clientId, topic }: SubscribeOptions): boolean {
-    const ok = this.pool.unsubscribe(clientId, topic);
+  unsubscribe({ clientId, channel }: SubscribeOptions): boolean {
+    const ok = this.pool.unsubscribe(clientId, channel);
     if (ok) {
-      this.eventBus.emit('subscription.removed', { clientId, topic });
+      this.eventBus.emit('subscription.removed', { clientId, channel });
     }
     return ok;
   }
@@ -247,12 +247,12 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Returns subscriber count for a topic.
-   * @param topic Topic name to inspect.
-   * @returns Number of subscribers currently attached to the topic.
+   * @description Returns subscriber count for a channel.
+   * @param channel Channel name to inspect.
+   * @returns Number of subscribers currently attached to the channel.
    */
-  topicCount(topic: string): number {
-    return this.pool.topicCount(topic);
+  channelCount(channel: string): number {
+    return this.pool.channelCount(channel);
   }
 
   /**
@@ -287,13 +287,13 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Broadcasts an envelope to topic subscribers.
-   * @param topic Topic name to publish against.
+   * @description Broadcasts an envelope to channel subscribers.
+   * @param channel Channel name to publish against.
    * @param envelope Event envelope to normalize and deliver.
    * @returns Number of local subscribers that received the event.
    */
   async broadcast(
-    topic: string,
+    channel: string,
     envelope: SseEventEnvelope,
   ): Promise<number> {
     const normalized: SseEventEnvelope = {
@@ -302,15 +302,15 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       timestamp: envelope.timestamp ?? Date.now(),
     };
 
-    const target = this.resolveBroadcastTarget(topic);
+    const target = this.resolveBroadcastTarget(channel);
 
     await this.transport.publish({
-      topic,
+      channel,
       envelope: normalized,
       target,
     });
 
-    return this.deliverLocal(topic, normalized);
+    return this.deliverLocal(channel, normalized);
   }
 
   /**
@@ -407,18 +407,18 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @description Delivers an envelope to in-process subscribers for a topic.
-   * @param topic Topic name used to select subscribers.
+   * @description Delivers an envelope to in-process subscribers for a channel.
+   * @param channel Channel name used to select subscribers.
    * @param envelope Event envelope to write.
    * @returns Number of in-process subscribers that received the event.
    */
   private async deliverLocal(
-    topic: string,
+    channel: string,
     envelope: SseEventEnvelope,
   ): Promise<number> {
-    const target = this.resolveBroadcastTarget(topic);
+    const target = this.resolveBroadcastTarget(channel);
 
-    const subscribers = this.pool.forTopic(topic);
+    const subscribers = this.pool.forChannel(channel);
     let count = 0;
 
     for (const connection of subscribers) {
@@ -426,12 +426,12 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       count++;
     }
 
-    this.eventBus.emit('broadcast.sent', { topic, target, count });
+    this.eventBus.emit('broadcast.sent', { channel, target, count });
     return count;
   }
 
-  private resolveBroadcastTarget(topic: string): BroadcastTarget {
-    const resolved = this.channelRegistry.resolve(topic);
+  private resolveBroadcastTarget(channel: string): BroadcastTarget {
+    const resolved = this.channelRegistry.resolve(channel);
     return resolved?.definition.audience ?? 'all';
   }
 

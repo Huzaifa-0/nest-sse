@@ -70,15 +70,15 @@ export class ChannelRegistryService implements ChannelRegistry {
   }
 
   /**
-   * @description Resolves a topic to the most specific matching channel definition.
-   * @param topic Topic name to match against registered patterns.
+   * @description Resolves a channel to the most specific matching channel definition.
+   * @param channel Channel name to match against registered patterns.
    * @returns The resolved channel with extracted params, or null when unmatched.
    */
-  resolve(topic: string): ResolvedChannel | null {
+  resolve(channel: string): ResolvedChannel | null {
     const matches: ResolvedMatch[] = [];
 
     for (const compiled of this.definitions) {
-      const matched = topic.match(compiled.regex);
+      const matched = channel.match(compiled.regex);
       if (!matched) {
         continue;
       }

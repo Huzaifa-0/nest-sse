@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Readable } from 'node:stream';
 
 /**
- * Delivery audience for topic broadcasts.
+ * Delivery audience for channel broadcasts.
  */
 export type BroadcastTarget = 'all' | 'public' | 'authenticated';
 
@@ -35,7 +35,7 @@ export interface StreamOpenOptions {
  */
 export interface SubscribeOptions {
   clientId: string;
-  topic: string;
+  channel: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -54,7 +54,7 @@ export type ChannelParams = Record<string, string>;
  */
 export interface ChannelAuthorizationContext {
   clientId: string;
-  topic: string;
+  channel: string;
   params: ChannelParams;
   requestMetadata: Record<string, unknown>;
 }
@@ -86,7 +86,7 @@ export interface ChannelDefinition {
 }
 
 /**
- * Matched channel definition details for a topic.
+ * Matched channel definition details for a channel.
  */
 export interface ResolvedChannel {
   definition: ChannelDefinition;
@@ -100,7 +100,7 @@ export interface ChannelRegistry {
   register(definition: ChannelDefinition): void;
   registerPublic(pattern: string): void;
   registerAuthenticated(pattern: string, authorize?: ChannelAuthorizeFn): void;
-  resolve(topic: string): ResolvedChannel | null;
+  resolve(channel: string): ResolvedChannel | null;
   authorize(
     resolved: ResolvedChannel,
     context: ChannelAuthorizationContext,
@@ -113,9 +113,9 @@ export interface ChannelRegistry {
 export type SubscribeFailureReason =
   | 'connection-not-found'
   | 'connection-closed'
-  | 'max-topics-reached'
+  | 'max-channels-reached'
   | 'unauthorized'
-  | 'topic-not-found';
+  | 'channel-not-found';
 
 /**
  * Subscribe operation result.
@@ -150,7 +150,7 @@ export interface PipeReadableOptions {
  */
 export interface ConnectionSnapshot {
   clientId: string;
-  topics: string[];
+  channels: string[];
   metadata: Record<string, unknown>;
   createdAt: number;
   lastSeenAt: number;
@@ -165,9 +165,9 @@ export interface SseLifecycleEvents {
   'connection.closed': { clientId: string; reason: string };
   'connection.heartbeat.sent': { clientId: string };
   'connection.heartbeat.timeout': { clientId: string };
-  'subscription.added': { clientId: string; topic: string };
-  'subscription.removed': { clientId: string; topic: string };
-  'broadcast.sent': { topic: string; target: BroadcastTarget; count: number };
+  'subscription.added': { clientId: string; channel: string };
+  'subscription.removed': { clientId: string; channel: string };
+  'broadcast.sent': { channel: string; target: BroadcastTarget; count: number };
   'stream.aborted': { clientId: string; reason: string };
   'stream.completed': { clientId: string; count: number };
   'stream.cancelled': { clientId: string; reason: string };

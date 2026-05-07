@@ -94,9 +94,9 @@ describe('SseService', () => {
   it('subscribes and broadcasts events', async () => {
     const { res } = mockConnection('c1');
 
-    expect(service.subscribe({ clientId: 'c1', topic: 'news' })).toEqual({ ok: true });
+    expect(service.subscribe({ clientId: 'c1', channel: 'news.public' })).toEqual({ ok: true });
 
-    const delivered = await service.broadcast('news', {
+    const delivered = await service.broadcast('news.public', {
       event: 'news.updated',
       data: { id: 1 },
     });
@@ -145,7 +145,7 @@ describe('SseService', () => {
 
     const result = service.subscribe({
       clientId: 'c5',
-      topic: 'news.private',
+      channel: 'news.private',
     });
 
     expect(result).toEqual({ ok: false, reason: 'unauthorized' });
@@ -156,7 +156,7 @@ describe('SseService', () => {
 
     const result = service.subscribe({
       clientId: 'c6',
-      topic: 'news.private',
+      channel: 'news.private',
       metadata: { userId: 'u1' },
     });
 
@@ -168,16 +168,16 @@ describe('SseService', () => {
 
     const result = service.subscribe({
       clientId: 'c10',
-      topic: 'news.private',
+      channel: 'news.private',
       metadata: { userId: 'u1' },
     });
 
     expect(result).toEqual({ ok: true });
   });
 
-  it('broadcasts public topic events to subscribed clients regardless of metadata', async () => {
+  it('broadcasts public channel events to subscribed clients regardless of metadata', async () => {
     const { res } = mockConnection('c11', { userId: 'u1' });
-    expect(service.subscribe({ clientId: 'c11', topic: 'news.public' })).toEqual({ ok: true });
+    expect(service.subscribe({ clientId: 'c11', channel: 'news.public' })).toEqual({ ok: true });
 
     jest.advanceTimersByTime(25);
     (res.write as any).mockClear();
@@ -193,12 +193,12 @@ describe('SseService', () => {
     expect(res.write).toHaveBeenCalled();
   });
 
-  it('broadcasts authenticated topic events after authorized subscription', async () => {
+  it('broadcasts authenticated channel events after authorized subscription', async () => {
     const { res } = mockConnection('c12');
     expect(
       service.subscribe({
         clientId: 'c12',
-        topic: 'news.private',
+        channel: 'news.private',
         metadata: { userId: 'u1' },
       }),
     ).toEqual({ ok: true });
@@ -222,12 +222,12 @@ describe('SseService', () => {
 
     const denied = service.subscribe({
       clientId: 'c7',
-      topic: 'orders.999',
+      channel: 'orders.999',
       metadata: { userId: 'u1', orderId: '123' },
     });
     const allowed = service.subscribe({
       clientId: 'c7',
-      topic: 'orders.123',
+      channel: 'orders.123',
       metadata: { userId: 'u1', orderId: '123' },
     });
 
@@ -242,7 +242,7 @@ describe('SseService', () => {
     jest.advanceTimersByTime(25);
     (res.write as any).mockClear();
 
-    (service as any).enqueueOrWrite('c8', {
+    (service as any).enqueueWrite('c8', {
       event: 'numbers.item',
       data: 1,
       timestamp: Date.now(),
@@ -263,7 +263,7 @@ describe('SseService', () => {
     jest.advanceTimersByTime(25);
     (res.write as any).mockClear();
 
-    (service as any).enqueueOrWrite('c9', {
+    (service as any).enqueueWrite('c9', {
       event: 'numbers.item',
       data: 1,
       timestamp: Date.now(),
@@ -271,7 +271,7 @@ describe('SseService', () => {
 
     expect(res.write).not.toHaveBeenCalled();
 
-    (service as any).enqueueOrWrite('c9', {
+    (service as any).enqueueWrite('c9', {
       event: 'numbers.item',
       data: 2,
       timestamp: Date.now(),

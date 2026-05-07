@@ -4,7 +4,7 @@ import type { SseEventEnvelope } from '../types/sse.types';
  * Message envelope exchanged by transport drivers.
  */
 export interface TransportMessage {
-  topic: string;
+  channel: string;
   envelope: SseEventEnvelope;
   target: 'all' | 'public' | 'authenticated';
 }
@@ -14,7 +14,7 @@ export interface TransportMessage {
  */
 export interface SseTransportAdapter {
   /**
-   * Publish a topic message to the transport backend.
+   * Publish a channel message to the transport backend.
    */
   publish(message: TransportMessage): Promise<void>;
 

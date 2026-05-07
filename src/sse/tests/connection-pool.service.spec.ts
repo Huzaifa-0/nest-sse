@@ -16,7 +16,7 @@ describe('ConnectionPoolService', () => {
         end: jest.fn(),
       } as any,
       metadata: {},
-      topics: new Set<string>(),
+      channels: new Set<string>(),
       createdAt: Date.now(),
       lastSeenAt: Date.now(),
       bufferedEvents: [],
@@ -32,14 +32,14 @@ describe('ConnectionPoolService', () => {
     expect(service.has('c1')).toBe(true);
   });
 
-  it('subscribes and unsubscribes from topics', () => {
+  it('subscribes and unsubscribes from channels', () => {
     service.create(record('c1'));
 
     expect(service.subscribe('c1', 'news')).toBe(true);
-    expect(service.topicCount('news')).toBe(1);
+    expect(service.channelCount('news')).toBe(1);
 
     expect(service.unsubscribe('c1', 'news')).toBe(true);
-    expect(service.topicCount('news')).toBe(0);
+    expect(service.channelCount('news')).toBe(0);
   });
 
   it('updates metadata and snapshots', () => {

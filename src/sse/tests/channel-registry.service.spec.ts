@@ -8,13 +8,13 @@ describe('ChannelRegistryService', () => {
   ): ChannelAuthorizationContext {
     return {
       clientId: input.clientId ?? 'c1',
-      topic: input.topic ?? 'demo.public',
+      channel: input.channel ?? 'demo.public',
       params: input.params ?? {},
       requestMetadata: input.requestMetadata ?? {},
     };
   }
 
-  it('resolves topic params from a dynamic authenticated pattern', () => {
+  it('resolves channel params from a dynamic authenticated pattern', () => {
     const registry = new ChannelRegistryService([
       {
         pattern: 'orders.{orderId}',
@@ -30,7 +30,7 @@ describe('ChannelRegistryService', () => {
     expect(resolved?.params).toEqual({ orderId: '123' });
   });
 
-  it('returns null for unmatched topics', () => {
+  it('returns null for unmatched channels', () => {
     const registry = new ChannelRegistryService([
       {
         pattern: 'demo.public',
@@ -55,18 +55,18 @@ describe('ChannelRegistryService', () => {
   it('denies unauthenticated connections on authenticated channels', () => {
     const registry = new ChannelRegistryService([
       {
-        pattern: 'private.topic',
+        pattern: 'private.channel',
         audience: 'authenticated',
       },
     ]);
 
-    const resolved = registry.resolve('private.topic');
+    const resolved = registry.resolve('private.channel');
     expect(resolved).not.toBeNull();
 
     const result = registry.authorize(
       resolved!,
       context({
-        topic: 'private.topic',
+        channel: 'private.channel',
       }),
     );
 
@@ -94,7 +94,7 @@ describe('ChannelRegistryService', () => {
     const denied = registry.authorize(
       resolved!,
       context({
-        topic: 'users.42.alerts',
+        channel: 'users.42.alerts',
         params: resolved!.params,
         requestMetadata: { userId: '77' },
       }),
@@ -103,7 +103,7 @@ describe('ChannelRegistryService', () => {
     const allowed = registry.authorize(
       resolved!,
       context({
-        topic: 'users.42.alerts',
+        channel: 'users.42.alerts',
         params: resolved!.params,
         requestMetadata: { userId: '42' },
       }),
@@ -135,7 +135,7 @@ describe('ChannelRegistryService', () => {
     const denied = registry.authorize(
       resolved!,
       context({
-        topic: 'orders.100',
+        channel: 'orders.100',
         params: resolved!.params,
         requestMetadata: { userId: 'u1', orderId: '555' },
       }),
@@ -144,7 +144,7 @@ describe('ChannelRegistryService', () => {
     const allowed = registry.authorize(
       resolved!,
       context({
-        topic: 'orders.100',
+        channel: 'orders.100',
         params: resolved!.params,
         requestMetadata: { userId: 'u1', orderId: '100' },
       }),

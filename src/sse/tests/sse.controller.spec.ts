@@ -11,14 +11,14 @@ describe('SseController', () => {
     controller.subscribe(
       {
         clientId: 'c1',
-        topic: 'orders.1',
+        channel: 'orders.1',
       },
       'user-1',
     );
 
     expect(subscribe).toHaveBeenCalledWith({
       clientId: 'c1',
-      topic: 'orders.1',
+      channel: 'orders.1',
       metadata: { userId: 'user-1' },
     });
   });
@@ -31,7 +31,7 @@ describe('SseController', () => {
     expect(() => {
       controller.subscribe({
         clientId: 'c1',
-        topic: 'orders.1',
+        channel: 'orders.1',
       });
     }).toThrow(ForbiddenException);
   });
@@ -44,7 +44,7 @@ describe('SseController', () => {
     expect(() => {
       controller.subscribe({
         clientId: 'c1',
-        topic: 'orders.1',
+        channel: 'orders.1',
       });
     }).toThrow(BadRequestException);
   });

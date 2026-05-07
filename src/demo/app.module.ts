@@ -7,7 +7,7 @@ import { authenticatedChannel, publicChannel, SseModule } from '../sse';
   imports: [
     SseModule.forRoot({
       maxConnections: 5000,
-      maxTopicsPerConnection: 64,
+      maxChannelsPerConnection: 64,
       heartbeatIntervalMs: 12_000,
       deadConnectionMs: 40_000,
       bufferMaxEvents: 8,

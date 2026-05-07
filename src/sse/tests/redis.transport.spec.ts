@@ -51,7 +51,7 @@ describe('RedisSseTransport', () => {
       .mockImplementation(async () => client as any);
 
     const message = {
-      topic: 'news.public',
+      channel: 'news.public',
       target: 'all' as const,
       envelope: {
         event: 'news.updated',
@@ -83,7 +83,7 @@ describe('RedisSseTransport', () => {
       .mockImplementation(async () => client as any);
 
     await transport.publish({
-      topic: 'topic.custom',
+      channel: 'channel.custom',
       target: 'authenticated',
       envelope: {
         event: 'custom.event',
@@ -112,7 +112,7 @@ describe('RedisSseTransport', () => {
     expect(client.on).toHaveBeenCalledWith('message', expect.any(Function));
 
     const validMessage = {
-      topic: 'topic.1',
+      channel: 'channel.1',
       target: 'public' as const,
       envelope: {
         event: 'event.1',
@@ -138,7 +138,7 @@ describe('RedisSseTransport', () => {
       .mockImplementationOnce(async () => subClient as any);
 
     await transport.publish({
-      topic: 'cleanup.topic',
+      channel: 'cleanup.channel',
       target: 'all',
       envelope: {
         event: 'cleanup.event',

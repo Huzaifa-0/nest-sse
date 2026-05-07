@@ -131,7 +131,7 @@ describe('AppController (e2e)', () => {
       .post('/demo/subscribe')
       .send({
         clientId,
-        topic: 'demo.private.42',
+        channel: 'demo.private.42',
       })
       .expect(403);
   });
@@ -146,7 +146,7 @@ describe('AppController (e2e)', () => {
       .post('/demo/subscribe')
       .send({
         clientId,
-        topic: 'demo.private.42',
+        channel: 'demo.private.42',
         metadata: { userId: '42' },
       })
       .expect(200)
@@ -156,7 +156,7 @@ describe('AppController (e2e)', () => {
       .post('/demo/unsubscribe')
       .send({
         clientId,
-        topic: 'demo.private.42',
+        channel: 'demo.private.42',
       })
       .expect(200)
       .expect({ ok: true });
@@ -173,18 +173,18 @@ describe('AppController (e2e)', () => {
 
     await request(baseUrl)
       .post('/demo/subscribe')
-      .send({ clientId: publicClientId, topic: 'demo.public' })
+      .send({ clientId: publicClientId, channel: 'demo.public' })
       .expect(200);
 
     await request(baseUrl)
       .post('/demo/subscribe')
-      .send({ clientId: authClientId, topic: 'demo.public' })
+      .send({ clientId: authClientId, channel: 'demo.public' })
       .expect(200);
 
     const authOnly = await request(baseUrl)
       .post('/demo/batch')
       .send({
-        topic: 'demo.public',
+        channel: 'demo.public',
         target: 'authenticated',
         count: 1,
         event: 'demo.targeted.auth',
@@ -194,7 +194,7 @@ describe('AppController (e2e)', () => {
     const publicOnly = await request(baseUrl)
       .post('/demo/batch')
       .send({
-        topic: 'demo.public',
+        channel: 'demo.public',
         target: 'public',
         count: 1,
         event: 'demo.targeted.public',
@@ -204,7 +204,7 @@ describe('AppController (e2e)', () => {
     const all = await request(baseUrl)
       .post('/demo/batch')
       .send({
-        topic: 'demo.public',
+        channel: 'demo.public',
         target: 'all',
         count: 1,
         event: 'demo.targeted.all',

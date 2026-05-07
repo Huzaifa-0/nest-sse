@@ -5,8 +5,8 @@ Scalable, event-driven Server-Sent Events (SSE) package for NestJS.
 This package provides:
 
 - Stream lifecycle management (open, close, cancel, replace)
-- Connection pool with topic subscriptions and metadata
-- Topic broadcasts with audience targeting (`all`, `public`, `authenticated`)
+- Connection pool with channel subscriptions and metadata
+- Channel broadcasts with audience targeting (`all`, `public`, `authenticated`)
 - Heartbeat delivery and dead-connection cleanup
 - Event buffering and automatic batch flush
 - Iterable and readable stream piping to clients
@@ -78,7 +78,7 @@ import {
 
 const sseOptions: SseModuleOptions = {
   maxConnections: 5000,
-  maxTopicsPerConnection: 64,
+  maxChannelsPerConnection: 64,
   heartbeatIntervalMs: 12_000,
   deadConnectionMs: 40_000,
   bufferMaxEvents: 8,
@@ -129,7 +129,7 @@ export class AppModule {}
 ```ts
 interface SseModuleOptions {
   maxConnections?: number;
-  maxTopicsPerConnection?: number;
+  maxChannelsPerConnection?: number;
   heartbeatIntervalMs?: number;
   deadConnectionMs?: number;
   bufferMaxEvents?: number;
@@ -147,7 +147,7 @@ interface SseModuleOptions {
 Runtime defaults:
 
 - `maxConnections`: `10_000`
-- `maxTopicsPerConnection`: `128`
+- `maxChannelsPerConnection`: `128`
 - `heartbeatIntervalMs`: `15_000`
 - `deadConnectionMs`: `45_000`
 - `bufferMaxEvents`: `16`
@@ -208,7 +208,7 @@ SseModule.forRoot({
 
 ## Channel Registry And Authorization
 
-Define rules with topic patterns:
+Define rules with channel patterns:
 
 - `public` channels accept public and authenticated streams.
 - `authenticated` channels require authenticated streams.
@@ -237,7 +237,7 @@ channels: [
 ```ts
 {
   clientId: string;
-  topic: string;
+  channel: string;
   params: Record<string, string>;
   requestMetadata: Record<string, unknown>;
 }
@@ -304,20 +304,20 @@ curl -N -H "x-user-id: 42" "http://localhost:3000/demo/connect/auth?clientId=cli
 ```bash
 curl -X POST http://localhost:3000/sse/subscribe \
   -H "content-type: application/json" \
-  -d '{"clientId":"client-public-1","topic":"feed.public","metadata":{"app":"web"}}'
+  -d '{"clientId":"client-public-1","channel":"feed.public","metadata":{"app":"web"}}'
 
 curl -X POST http://localhost:3000/sse/unsubscribe \
   -H "content-type: application/json" \
-  -d '{"clientId":"client-public-1","topic":"feed.public"}'
+  -d '{"clientId":"client-public-1","channel":"feed.public"}'
 ```
 
-### Broadcast to a topic
+### Broadcast to a channel
 
 ```bash
 curl -X POST http://localhost:3000/sse/broadcast \
   -H "content-type: application/json" \
   -d '{
-    "topic":"feed.public",
+    "channel":"feed.public",
     "event":"feed.updated",
     "data":{"message":"new update"},
     "target":"all"
@@ -399,14 +399,14 @@ export class NotificationsService {
     return this.sse.cancelStream(clientId, 'admin-cancelled');
   }
 
-  diagnostics(topic: string): {
+  diagnostics(channel: string): {
     totalConnections: number;
     subscribers: number;
     snapshots: ReturnType<SseService['connectionSnapshots']>;
   } {
     return {
       totalConnections: this.sse.connectionCount(),
-      subscribers: this.sse.topicCount(topic),
+      subscribers: this.sse.channelCount(channel),
       snapshots: this.sse.connectionSnapshots(),
     };
   }
@@ -423,11 +423,11 @@ Available core methods:
 - `closeConnection(clientId, reason?)`
 - `subscribe(options)`
 - `unsubscribe(options)`
-- `broadcast(topic, envelope, { target? })`
+- `broadcast(channel, envelope, { target? })`
 - `pipeIterable(options)`
 - `pipeReadable(options)`
 - `cancelStream(clientId, reason?)`
-- `connectionCount()` / `topicCount(topic)`
+- `connectionCount()` / `channelCount(channel)`
 - `connectionSnapshot(clientId)` / `connectionSnapshots()`
 - `setMetadata(clientId, metadata)`
 - `waitForClose(request)`
@@ -447,8 +447,8 @@ export class SseMetricsService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly bus: SseEventBusService) {}
 
   onModuleInit(): void {
-    this.unsubscribe = this.bus.on('broadcast.sent', ({ topic, target, count }) => {
-      console.log('[sse] broadcast', { topic, target, count });
+    this.unsubscribe = this.bus.on('broadcast.sent', ({ channel, target, count }) => {
+      console.log('[sse] broadcast', { channel, target, count });
     });
   }
 

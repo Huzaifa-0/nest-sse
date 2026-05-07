@@ -17,7 +17,7 @@ export interface RedisTransportOptions {
  */
 export interface SseModuleOptions {
   maxConnections?: number;
-  maxTopicsPerConnection?: number;
+  maxChannelsPerConnection?: number;
   heartbeatIntervalMs?: number;
   deadConnectionMs?: number;
   bufferMaxEvents?: number;
@@ -46,7 +46,7 @@ export const defaultSseModuleOptions: Required<
   Omit<SseModuleOptions, 'transport' | 'channels'>
 > = {
   maxConnections: 10_000,
-  maxTopicsPerConnection: 128,
+  maxChannelsPerConnection: 128,
   heartbeatIntervalMs: 15_000,
   deadConnectionMs: 45_000,
   bufferMaxEvents: 16,

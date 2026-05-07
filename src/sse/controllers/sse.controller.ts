@@ -20,15 +20,15 @@ import { SseService } from '../services/sse.service';
  */
 interface SubscribeBody {
   clientId: string;
-  topic: string;
+  channel: string;
   metadata?: Record<string, unknown>;
 }
 
 /**
- * Payload for topic broadcast endpoint.
+ * Payload for channel broadcast endpoint.
  */
 interface BroadcastBody {
-  topic: string;
+  channel: string;
   event: string;
   data: unknown;
 }
@@ -70,7 +70,7 @@ export class SseController {
   }
 
   /**
-   * Subscribe a client to a topic.
+   * Subscribe a client to a channel.
    */
   @Post('subscribe')
   @HttpCode(204)
@@ -78,8 +78,8 @@ export class SseController {
     @Body() body: SubscribeBody,
     @Headers('x-user-id') userId?: string,
   ): void {
-    if (!body.clientId || !body.topic) {
-      throw new BadRequestException('clientId and topic are required');
+    if (!body.clientId || !body.channel) {
+      throw new BadRequestException('clientId and channel are required');
     }
 
     const metadata = userId
@@ -91,7 +91,7 @@ export class SseController {
 
     const result = this.sse.subscribe({
       clientId: body.clientId,
-      topic: body.topic,
+      channel: body.channel,
       metadata,
     });
     if (!result.ok) {
@@ -103,13 +103,13 @@ export class SseController {
   }
 
   /**
-   * Unsubscribe a client from a topic.
+   * Unsubscribe a client from a channel.
    */
   @Post('unsubscribe')
   @HttpCode(204)
   unsubscribe(@Body() body: SubscribeBody): void {
-    if (!body.clientId || !body.topic) {
-      throw new BadRequestException('clientId and topic are required');
+    if (!body.clientId || !body.channel) {
+      throw new BadRequestException('clientId and channel are required');
     }
 
     const ok = this.sse.unsubscribe(body);
@@ -119,16 +119,16 @@ export class SseController {
   }
   
   /**
-   * Broadcast an event payload to topic subscribers.
+   * Broadcast an event payload to channel subscribers.
    */
   @Post('broadcast')
   async broadcast(@Body() body: BroadcastBody): Promise<{ delivered: number }> {
-    if (!body.topic || !body.event) {
-      throw new BadRequestException('topic and event are required');
+    if (!body.channel || !body.event) {
+      throw new BadRequestException('channel and event are required');
     }
 
     const delivered = await this.sse.broadcast(
-      body.topic,
+      body.channel,
       {
         event: body.event,
         data: body.data,

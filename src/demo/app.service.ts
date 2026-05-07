@@ -26,7 +26,7 @@ interface ServiceStatus {
 
 interface SubscribeRequest {
   clientId: string;
-  topic: string;
+  channel: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -40,7 +40,7 @@ interface RegisterChannelRequest {
 }
 
 interface BatchEmitRequest {
-  topic: string;
+  channel: string;
   event?: string;
   count?: number;
   payload?: Record<string, unknown>;
@@ -73,7 +73,7 @@ interface StreamEmitResult {
 
 interface CancellableStreamRequest {
   clientId: string;
-  topic?: string;
+  channel?: string;
   total?: number;
   intervalMs?: number;
   failAt?: number;
@@ -146,8 +146,8 @@ export class AppService {
   }
 
   /**
-   * @description Subscribes a connected client to a topic.
-   * @param input Client and topic details for the subscription request.
+   * @description Subscribes a connected client to a channel.
+   * @param input Client and channel details for the subscription request.
    * @returns A structured success flag and optional failure reason.
    */
   subscribe(input: SubscribeRequest): SubscribeResponse {
@@ -159,8 +159,8 @@ export class AppService {
   }
 
   /**
-   * @description Removes a client subscription from a topic.
-   * @param input Client and topic details for the unsubscribe request.
+   * @description Removes a client subscription from a channel.
+   * @param input Client and channel details for the unsubscribe request.
    * @returns True when a subscription existed and was removed.
    */
   unsubscribe(input: SubscribeRequest): boolean {
@@ -209,12 +209,12 @@ export class AppService {
   }
 
   /**
-   * @description Emits a batch of synthetic events to a topic.
-   * @param request Topic and payload options for batched emission.
+   * @description Emits a batch of synthetic events to a channel.
+   * @param request Channel and payload options for batched emission.
    * @returns Number of attempted events and delivered fan-out count.
    */
   async emitBatch({
-    topic,
+    channel,
     event = 'demo.batch.item',
     count = 5,
     payload = {},
@@ -223,7 +223,7 @@ export class AppService {
 
     for (let i = 0; i < count; i += 1) {
       delivered += await this.sse.broadcast(
-        topic,
+        channel,
         {
           event,
           data: {
@@ -323,7 +323,7 @@ export class AppService {
    */
   async streamAndCancelOnSignalOrEvent({
     clientId,
-    topic = 'demo.stream.errors',
+    channel = 'demo.stream.errors',
     total = 20,
     intervalMs = 50,
     failAt,
@@ -346,7 +346,7 @@ export class AppService {
           reason: 'event.error',
         });
 
-        await this.sse.broadcast(topic, {
+        await this.sse.broadcast(channel, {
           event: 'event.error',
           data: {
             clientId,
@@ -357,7 +357,7 @@ export class AppService {
         });
 
         if (cancelOnError) {
-          await this.sse.broadcast(topic, {
+          await this.sse.broadcast(channel, {
             event: 'event.cancel',
             data: {
               clientId,
@@ -366,7 +366,7 @@ export class AppService {
             timestamp: Date.now(),
           });
 
-          await this.sse.broadcast(topic, {
+          await this.sse.broadcast(channel, {
             event: 'event.cancle',
             data: {
               clientId,

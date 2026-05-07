@@ -59,10 +59,10 @@ export class AppController {
   @Post('demo/subscribe')
   @HttpCode(200)
   subscribe(
-    @Body() body: { clientId: string; topic: string; metadata?: Record<string, unknown> },
+    @Body() body: { clientId: string; channel: string; metadata?: Record<string, unknown> },
   ): { ok: boolean } {
-    if (!body.clientId || !body.topic) {
-      throw new BadRequestException('clientId and topic are required');
+    if (!body.clientId || !body.channel) {
+      throw new BadRequestException('clientId and channel are required');
     }
 
     const result = this.appService.subscribe(body);
@@ -79,9 +79,9 @@ export class AppController {
 
   @Post('demo/unsubscribe')
   @HttpCode(200)
-  unsubscribe(@Body() body: { clientId: string; topic: string }): { ok: boolean } {
-    if (!body.clientId || !body.topic) {
-      throw new BadRequestException('clientId and topic are required');
+  unsubscribe(@Body() body: { clientId: string; channel: string }): { ok: boolean } {
+    if (!body.clientId || !body.channel) {
+      throw new BadRequestException('clientId and channel are required');
     }
 
     const ok = this.appService.unsubscribe(body);
@@ -122,14 +122,14 @@ export class AppController {
   async emitBatch(
     @Body()
     body: {
-      topic: string;
+      channel: string;
       event?: string;
       count?: number;
       payload?: Record<string, unknown>;
     },
   ): Promise<{ totalEvents: number; delivered: number }> {
-    if (!body.topic) {
-      throw new BadRequestException('topic is required');
+    if (!body.channel) {
+      throw new BadRequestException('channel is required');
     }
 
     return this.appService.emitBatch(body);
@@ -175,7 +175,7 @@ export class AppController {
     @Body()
     body: {
       clientId: string;
-      topic?: string;
+      channel?: string;
       total?: number;
       intervalMs?: number;
       failAt?: number;
@@ -196,10 +196,10 @@ export class AppController {
 
   @Post('demo/broadcast/public')
   async demoPublicBroadcast(
-    @Body() body: { topic: string; message: string },
+    @Body() body: { channel: string; message: string },
   ): Promise<{ delivered: number }> {
     const result = await this.appService.emitBatch({
-      topic: body.topic,
+      channel: body.channel,
       count: 1,
       event: 'demo.public',
       payload: {
@@ -212,10 +212,10 @@ export class AppController {
 
   @Post('demo/broadcast/auth')
   async demoAuthBroadcast(
-    @Body() body: { topic: string; message: string },
+    @Body() body: { channel: string; message: string },
   ): Promise<{ delivered: number }> {
     const result = await this.appService.emitBatch({
-      topic: body.topic,
+      channel: body.channel,
       count: 1,
       event: 'demo.auth',
       payload: {
