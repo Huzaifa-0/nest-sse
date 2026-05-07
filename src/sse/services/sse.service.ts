@@ -184,6 +184,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
     }
 
     const resolved = this.channelRegistry.resolve(topic);
+    let mergedMetadata: Record<string, unknown> = {...metadata};
 
     if (!resolved){
       return { ok: false, reason: 'topic-not-found' };
@@ -201,11 +202,14 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (authorizeResult.metadata) {
-      this.pool.setMetadata(clientId, authorizeResult.metadata);
+      mergedMetadata = {
+        ...mergedMetadata,
+        ...authorizeResult.metadata,
+      };
     }
 
-    if (metadata) {
-      this.pool.setMetadata(clientId, metadata);
+    if(Object.keys(mergedMetadata).length > 0){
+      this.pool.setMetadata(clientId, mergedMetadata);
       this.eventBus.emit('connection.metadata.updated', { clientId });
     }
 
