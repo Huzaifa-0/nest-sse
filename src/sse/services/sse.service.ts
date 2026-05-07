@@ -129,7 +129,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
     options.request.on('close', onAbort);
     options.request.on('aborted', onAbort);
 
-    this.enqueueOrWrite(options.clientId, {
+    this.emit(options.clientId, {
       event: 'connection.ready',
       data: { clientId: options.clientId, ts: now },
       timestamp: now,
@@ -325,7 +325,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
 
-    this.enqueueOrWrite(clientId, {
+    this.emit(clientId, {
       id: this.nextEventId(),
       event: this.options.cancelEventName,
       data: { reason },
@@ -358,7 +358,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
         return count;
       }
 
-      this.enqueueOrWrite(clientId, {
+      this.emit(clientId, {
         id: this.nextEventId(),
         event,
         data: item,
@@ -392,7 +392,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
         return count;
       }
 
-      this.enqueueOrWrite(clientId, {
+      this.emit(clientId, {
         id: this.nextEventId(),
         event,
         data: chunk,
@@ -422,7 +422,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
     let count = 0;
 
     for (const connection of subscribers) {
-      this.enqueueOrWrite(connection.clientId, envelope);
+      this.emit(connection.clientId, envelope);
       count++;
     }
 
@@ -452,7 +452,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
-        this.enqueueOrWrite(connection.clientId, {
+        this.emit(connection.clientId, {
           id: this.nextEventId(),
           event: this.options.heartbeatEventName,
           data: { ts: now },
@@ -472,7 +472,7 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
    * @param envelope Event envelope to enqueue or write.
    * @returns Nothing.
    */
-  private enqueueOrWrite(clientId: string, envelope: SseEventEnvelope): void {
+  private enqueueWrite(clientId: string, envelope: SseEventEnvelope): void {
     const connection = this.pool.get(clientId);
     if (!connection || connection.isClosed) {
       return;
@@ -495,6 +495,24 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
       connection.flushTimer = setTimeout(() => {
         this.flush(clientId);
       }, this.options.bufferFlushMs);
+    }
+  }
+
+  /**
+   * @description Immediately writes an event to a client stream, bypassing any batching.
+   * @param clientId Unique client identifier.
+   * @param envelope Event envelope to write.
+   * @return Nothing.
+   */
+  private emit(clientId: string, envelope: SseEventEnvelope): void {
+    const connection = this.pool.get(clientId);
+    if (!connection || connection.isClosed) {
+      return;
+    }
+
+    this.writeEvent(connection.response, envelope);
+    if(this.options.heartbeatEventName !== envelope.event){
+      this.pool.updateLastSeen(clientId);
     }
   }
 
