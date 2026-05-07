@@ -184,22 +184,24 @@ export class SseService implements OnModuleInit, OnModuleDestroy {
     }
 
     const resolved = this.channelRegistry.resolve(topic);
-    if (resolved) {
 
-      const authorizeResult = this.channelRegistry.authorize(resolved, {
-        clientId,
-        topic,
-        params: resolved.params,
-        requestMetadata: metadata ?? {},
-      });
+    if (!resolved){
+      return { ok: false, reason: 'topic-not-found' };
+    }
 
-      if (!authorizeResult.allowed) {
-        return { ok: false, reason: 'unauthorized' };
-      }
+    const authorizeResult = this.channelRegistry.authorize(resolved, {
+      clientId,
+      topic,
+      params: resolved.params,
+      requestMetadata: metadata ?? {},
+    });
 
-      if (authorizeResult.metadata) {
-        this.pool.setMetadata(clientId, authorizeResult.metadata);
-      }
+    if (!authorizeResult.allowed) {
+      return { ok: false, reason: 'unauthorized' };
+    }
+
+    if (authorizeResult.metadata) {
+      this.pool.setMetadata(clientId, authorizeResult.metadata);
     }
 
     if (metadata) {

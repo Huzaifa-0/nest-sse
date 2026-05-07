@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SseModule } from '../sse';
-import type { ChannelAuthorizationContext } from '../sse';
+import { authenticatedChannel, publicChannel, SseModule } from '../sse';
 
 @Module({
   imports: [
@@ -13,24 +12,19 @@ import type { ChannelAuthorizationContext } from '../sse';
       deadConnectionMs: 40_000,
       bufferMaxEvents: 8,
       bufferFlushMs: 150,
+      batchEventName: 'events.batch',
+      cancelEventName: 'stream.cancel',
+      heartbeatEventName: 'heartbeat',
       channels: [
-        {
-          pattern: 'demo.public',
-          audience: 'public',
-        },
-        {
-          pattern: 'demo.private.{userId}',
-          audience: 'authenticated',
-          authorize: ({
-            params,
-            requestMetadata,
-          }: ChannelAuthorizationContext) => {
-            const userId = String(requestMetadata.userId ?? '');
-            return userId === params.userId;
-          },
-        },
+        publicChannel('feed'),
+        authenticatedChannel('orders.{orderId}', ({ params, requestMetadata }) => {
+          return {
+            allowed: String(requestMetadata.orderId ?? '') === params.orderId,
+            reason: 'order-mismatch',
+          };
+        }),
       ],
-    }),
+  }),
   ],
   controllers: [AppController],
   providers: [AppService],

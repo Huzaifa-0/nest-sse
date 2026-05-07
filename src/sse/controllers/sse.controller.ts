@@ -143,12 +143,12 @@ export class SseController {
    */
   @Post('cancel')
   @HttpCode(204)
-  cancel(@Body() body: { clientId: string; reason?: string }): void {
-    if (!body.clientId) {
+  cancel(@Body("clientId") clientId: string): void {
+    if (!clientId) {
       throw new BadRequestException('clientId is required');
     }
 
-    const ok = this.sse.cancelStream(body.clientId, body.reason);
+    const ok = this.sse.cancelStream(clientId);
     if (!ok) {
       throw new NotFoundException('Connection not found');
     }

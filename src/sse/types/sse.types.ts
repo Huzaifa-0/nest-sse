@@ -114,7 +114,8 @@ export type SubscribeFailureReason =
   | 'connection-not-found'
   | 'connection-closed'
   | 'max-topics-reached'
-  | 'unauthorized';
+  | 'unauthorized'
+  | 'topic-not-found';
 
 /**
  * Subscribe operation result.
